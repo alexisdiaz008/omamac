@@ -16,7 +16,7 @@ Note: This will overwrite any existing configurations for `.zshrc`, Neovim, and 
 
 - **Window Management**: Rectangle Pro, Hammerspoon, Raycast
 - **Terminal**: Alacritty, Tmux
-- **Shell**: Starship prompt, fzf, eza, zoxide
+- **Shell**: Starship prompt, fzf, eza, zoxide, zsh-autosuggestions, fast-syntax-highlighting, zsh-autocomplete
 - **Editors**: nvim, opencode, claude-code
 - **Dev tools**: mise (Ruby, Node.js), Docker, lazygit, lazydocker
 - **Apps**: 1Password, Obsidian, Google Chrome, Dropbox, Spotify, Signal, WhatsApp

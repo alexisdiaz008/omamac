@@ -1,0 +1,17 @@
+# Omamac zsh plugins (Homebrew formulas)
+[[ -n ${ZSH_VERSION:-} ]] || return
+
+_omamac_brew_prefix="${HOMEBREW_PREFIX:-/opt/homebrew}"
+
+# Autocomplete first so it owns completion widgets
+[[ -r "$_omamac_brew_prefix/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh" ]] &&
+  source "$_omamac_brew_prefix/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh"
+
+# Highlighter, then autosuggestions (wrap the line editor)
+[[ -r "$_omamac_brew_prefix/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh" ]] &&
+  source "$_omamac_brew_prefix/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh"
+
+[[ -r "$_omamac_brew_prefix/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] &&
+  source "$_omamac_brew_prefix/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+
+unset _omamac_brew_prefix

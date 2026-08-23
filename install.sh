@@ -75,7 +75,7 @@ install() {
   git clone --depth 1 "$REPO" "$INSTALLER_DIR"
 
   section "Installing packages..."
-  packages=(tmux mise nvim opencode lazygit lazydocker starship zoxide eza jq gum gh libyaml)
+  packages=(tmux mise nvim opencode lazygit lazydocker starship zoxide eza jq gum gh libyaml zsh-autosuggestions zsh-fast-syntax-highlighting zsh-autocomplete)
   for pkg in $packages; do ensure_formula "$pkg"; done
 
   # Install Alacritty manually from GitHub releases
@@ -124,6 +124,17 @@ install() {
   for dir in "$INSTALLER_DIR/config"/*/; do
     echo "✓ $(basename "$dir")"
   done
+
+  # Hook zsh plugins after Omadots overwrites .zshrc
+  section "Configuring zsh plugins..."
+  if ! grep -qF 'source ~/.config/shell/plugins' "$HOME/.zshrc" 2>/dev/null; then
+    cat >>"$HOME/.zshrc" <<'EOF'
+
+# Omamac zsh plugins
+source ~/.config/shell/plugins
+EOF
+  fi
+  echo "✓ Zsh plugins"
 
   # Create hush file to suppress "Last login" message
   touch "$HOME/.hushlogin"
