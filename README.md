@@ -7,7 +7,7 @@ It's built on Rectangle Pro for window positioning, Hammerspoon for window navig
 ## Install
 
 ```bash
-curl -fsSL https://omamac.org/install | bash
+curl -fsSL https://omamac.org/install | zsh
 ```
 
 Note: This will overwrite any existing configurations for `.zshrc`, Neovim, and the like. It's intended for a fresh installation.

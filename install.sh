@@ -1,6 +1,11 @@
 #!/bin/zsh
 set -euo pipefail
 
+if [[ -z "${ZSH_VERSION:-}" ]]; then
+  echo "Run with zsh: curl -fsSL https://omamac.org/install | zsh" >&2
+  exit 1
+fi
+
 install() {
   clear
   echo
@@ -18,6 +23,38 @@ install() {
     echo -e "\n==> $1"
   }
 
+  formula_present() { brew list --formula "$1" &>/dev/null; }
+  cask_present() { brew list --cask "$1" &>/dev/null; }
+
+  ensure_formula() {
+    local pkg="$1"
+    if formula_present "$pkg"; then
+      echo "✓ $pkg (already installed)"
+      return
+    fi
+    echo "Installing $pkg..."
+    brew install "$pkg"
+  }
+
+  ensure_cask() {
+    local cask="$1"
+    if cask_present "$cask"; then
+      echo "✓ $cask (already installed)"
+      return
+    fi
+    echo "Installing $cask..."
+    brew install --cask "$cask"
+  }
+
+  open_if_present() {
+    local app="$1"
+    if [[ -d "/Applications/${app}.app" ]] || [[ -d "$HOME/Applications/${app}.app" ]]; then
+      open -a "$app"
+    else
+      echo "Skipping open: $app not found"
+    fi
+  }
+
   section "Permission needed for setup..."
   sudo echo "✓ Granted"
 
@@ -26,7 +63,7 @@ install() {
     section "Installing brew..."
     curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash
     eval "$(/opt/homebrew/bin/brew shellenv zsh)"
-    brew install git
+    ensure_formula git
   fi
 
   # Clone
@@ -39,7 +76,7 @@ install() {
 
   section "Installing packages..."
   packages=(tmux mise nvim opencode lazygit lazydocker starship zoxide eza jq gum gh libyaml)
-  for pkg in $packages; do brew install "$pkg" || true; done
+  for pkg in $packages; do ensure_formula "$pkg"; done
 
   # Install Alacritty manually from GitHub releases
   section "Installing Alacritty..."
@@ -55,21 +92,24 @@ install() {
   # Install secondary apps
   section "Installing apps..."
   casks=(rectangle-pro hammerspoon font-jetbrains-mono-nerd-font docker-desktop google-chrome claude-code raycast)
-  for cask in $casks; do brew install --cask "$cask" || true; done
+  for cask in $casks; do ensure_cask "$cask"; done
 
   # Install optional apps
   section "Installing optional apps..."
+  ensure_formula gum
   selected_apps=$(gum choose --no-limit --height=11 \
     --selected="1password" --selected="dropbox" --selected="spotify" \
     --selected="signal" --selected="whatsapp" --selected="obsidian" \
     --selected="zoom" --selected="localsend" --selected="tailscale" \
     "1password" "dropbox" "spotify" "signal" "whatsapp" "obsidian" "zoom" "localsend" "lm-studio" "tailscale")
   while IFS= read -r app; do
-    [[ -n "$app" ]] && brew install --cask "$app" || true
+    [[ -n "$app" ]] && ensure_cask "$app" || true
   done <<< "$selected_apps"
 
   # Install dev environments
   section "Installing dev environments..."
+  ensure_formula gum
+  ensure_formula mise
   selected_langs=$(gum choose --no-limit --height=15 \
     --selected="node" --selected="ruby" \
     "node" "ruby" "python" "go" "rust" "java" "php" "elixir" "erlang" "scala" "kotlin" "deno" "bun")
@@ -93,6 +133,7 @@ install() {
   echo "✓ Settings"
 
   # Correct hammerspoon config location
+  ensure_cask hammerspoon
   defaults write org.hammerspoon.Hammerspoon MJConfigFile "$HOME/.config/hammerspoon/init.lua"
 
   # Done!
@@ -105,10 +146,15 @@ install() {
   echo "6. Remember to authenticate with: gh auth login"
   echo "7. Then logout and back in for everything to take effect (Cmd + Shift + Q)"
 
-  open -a "Hammerspoon"
-  open -a "Rectangle Pro"
-  open -a "Raycast"
-  open -a "Tailscale"
+  ensure_cask hammerspoon || true
+  ensure_cask rectangle-pro || true
+  ensure_cask raycast || true
+  ensure_cask tailscale || true
+
+  open_if_present "Hammerspoon"
+  open_if_present "Rectangle Pro"
+  open_if_present "Raycast"
+  open_if_present "Tailscale"
 }
 
 # Must use a function to prevent brew installs from stealing stdin
