@@ -1,0 +1,21 @@
+# oh-my-zsh daveverwer: red host, green cwd, blue git
+add_newline = false
+format = "$hostname:$directory$git_branch $character"
+
+[hostname]
+ssh_only = false
+trim_at = "."
+format = "[$hostname](red)"
+
+[directory]
+truncation_length = 1
+truncation_symbol = ""
+truncate_to_repo = false
+format = "[$path](green)"
+
+[git_branch]
+format = " [\\($branch\\)](blue)"
+
+[character]
+success_symbol = '[\$](bold)'
+error_symbol = '[\$](bold red)'
