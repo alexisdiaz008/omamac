@@ -2,7 +2,9 @@
 
 # Install Alacritty manually from GitHub releases (deprecated on homebrew due to unsigned binaries)
 
-if [[ ! -d "/Applications/Alacritty.app" ]]; then
+if [[ -d "/Applications/Alacritty.app" ]]; then
+  echo "✓ Alacritty (already installed)"
+else
   echo "Downloading latest Alacritty from GitHub releases..."
   ALACRITTY_URL=$(curl -s https://api.github.com/repos/alacritty/alacritty/releases/latest | grep -o '"browser_download_url": "[^"]*\.dmg"' | cut -d'"' -f4)
   curl -LO "$ALACRITTY_URL"
@@ -11,6 +13,5 @@ if [[ ! -d "/Applications/Alacritty.app" ]]; then
   cp -R /Volumes/Alacritty/Alacritty.app /Applications/
   hdiutil detach /Volumes/Alacritty
   rm "$ALACRITTY_DMG"
+  echo "✓ Alacritty"
 fi
-
-echo "✓ Alacritty"

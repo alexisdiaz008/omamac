@@ -25,11 +25,17 @@ install() {
 
   formula_present() { brew list --formula "$1" &>/dev/null; }
   cask_present() { brew list --cask "$1" &>/dev/null; }
+  app_present() {
+    local app="$1"
+    [[ -d "/Applications/${app}.app" ]] || [[ -d "$HOME/Applications/${app}.app" ]]
+  }
 
   ensure_formula() {
     local pkg="$1"
     if formula_present "$pkg"; then
-      echo "✓ $pkg (already installed)"
+      echo "Upgrading $pkg..."
+      brew upgrade --formula "$pkg" || true
+      echo "✓ $pkg"
       return
     fi
     echo "Installing $pkg..."
@@ -39,20 +45,32 @@ install() {
   ensure_cask() {
     local cask="$1"
     if cask_present "$cask"; then
-      echo "✓ $cask (already installed)"
+      echo "Upgrading $cask..."
+      brew upgrade --cask "$cask" || true
+      echo "✓ $cask"
       return
     fi
     echo "Installing $cask..."
-    brew install --cask "$cask"
+    # --adopt takes over an existing .app (e.g. Chrome installed from google.com)
+    brew install --cask --adopt "$cask"
   }
 
   open_if_present() {
     local app="$1"
-    if [[ -d "/Applications/${app}.app" ]] || [[ -d "$HOME/Applications/${app}.app" ]]; then
+    if app_present "$app"; then
       open -a "$app"
     else
       echo "Skipping open: $app not found"
     fi
+  }
+
+  omadots_present() {
+    [[ -f "$HOME/.config/shell/all" ]] && grep -qF 'source ~/.config/shell/all' "$HOME/.zshrc" 2>/dev/null
+  }
+
+  lang_present() {
+    local lang="$1"
+    mise ls 2>/dev/null | awk '{print $1}' | grep -qx "$lang"
   }
 
   section "Permission needed for setup..."
@@ -63,6 +81,12 @@ install() {
     section "Installing brew..."
     curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash
     eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+  fi
+
+  section "Updating brew..."
+  brew update
+
+  if ! command -v git &> /dev/null; then
     ensure_formula git
   fi
 
@@ -78,44 +102,111 @@ install() {
   packages=(tmux mise nvim opencode lazygit lazydocker starship zoxide eza jq gum gh libyaml zsh-autosuggestions zsh-fast-syntax-highlighting zsh-autocomplete)
   for pkg in $packages; do ensure_formula "$pkg"; done
 
-  # Install Alacritty manually from GitHub releases
+  # Install Alacritty manually from GitHub releases (skips if already present)
   section "Installing Alacritty..."
   . "$INSTALLER_DIR/install/alacritty.sh"
 
-  # Install Omadots
-  curl -fsSL https://raw.githubusercontent.com/omacom-io/omadots/refs/heads/master/install.sh | zsh
+  # Install Omadots (destructive: wipes nvim, overwrites .zshrc) — skip on rerun
+  if omadots_present; then
+    section "Omadots (already installed)"
+    echo "✓ Skipping Omadots"
+  else
+    section "Installing Omadots..."
+    curl -fsSL https://raw.githubusercontent.com/omacom-io/omadots/refs/heads/master/install.sh | zsh
+  fi
 
   section "Configuring brew init..."
-  echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >>"$HOME/.config/shell/inits"
-  echo "✓ Zsh"
+  mkdir -p "$HOME/.config/shell"
+  touch "$HOME/.config/shell/inits"
+  if ! grep -qF 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$HOME/.config/shell/inits" 2>/dev/null; then
+    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >>"$HOME/.config/shell/inits"
+    echo "✓ Brew init"
+  else
+    echo "✓ Brew init (already configured)"
+  fi
 
   # Install secondary apps
   section "Installing apps..."
   casks=(rectangle-pro hammerspoon font-jetbrains-mono-nerd-font docker-desktop google-chrome claude-code raycast)
-  for cask in $casks; do ensure_cask "$cask"; done
+  for cask in $casks; do
+    # Docker.app is often installed from docker.com, not Homebrew
+    if [[ "$cask" == "docker-desktop" ]] && app_present Docker; then
+      echo "✓ docker-desktop (already installed)"
+      continue
+    fi
+    ensure_cask "$cask"
+  done
 
-  # Install optional apps
+  # Install optional apps — upgrade present, gum only for missing
   section "Installing optional apps..."
   ensure_formula gum
-  selected_apps=$(gum choose --no-limit --height=11 \
-    --selected="1password" --selected="dropbox" --selected="spotify" \
-    --selected="signal" --selected="whatsapp" --selected="obsidian" \
-    --selected="zoom" --selected="localsend" --selected="tailscale" \
-    "1password" "dropbox" "spotify" "signal" "whatsapp" "obsidian" "zoom" "localsend" "lm-studio" "tailscale")
-  while IFS= read -r app; do
-    [[ -n "$app" ]] && ensure_cask "$app" || true
-  done <<< "$selected_apps"
+  optional_apps=(1password dropbox spotify signal whatsapp obsidian zoom localsend lm-studio tailscale)
+  optional_defaults=(1password dropbox spotify signal whatsapp obsidian zoom localsend tailscale)
 
-  # Install dev environments
+  for app in $optional_apps; do
+    if cask_present "$app"; then
+      ensure_cask "$app"
+    fi
+  done
+
+  missing_apps=()
+  gum_selected_flags=()
+  for app in $optional_apps; do
+    if ! cask_present "$app"; then
+      missing_apps+=("$app")
+      if (( ${optional_defaults[(Ie)$app]} )); then
+        gum_selected_flags+=(--selected="$app")
+      fi
+    fi
+  done
+
+  if (( ${#missing_apps[@]} > 0 )); then
+    selected_apps=$(gum choose --no-limit --height=11 \
+      "${gum_selected_flags[@]}" \
+      "${missing_apps[@]}")
+    while IFS= read -r app; do
+      [[ -n "$app" ]] && ensure_cask "$app" || true
+    done <<< "$selected_apps"
+  else
+    echo "✓ All optional apps already installed"
+  fi
+
+  # Install dev environments — upgrade present langs, gum only for missing
   section "Installing dev environments..."
   ensure_formula gum
   ensure_formula mise
-  selected_langs=$(gum choose --no-limit --height=15 \
-    --selected="node" --selected="ruby" \
-    "node" "ruby" "python" "go" "rust" "java" "php" "elixir" "erlang" "scala" "kotlin" "deno" "bun")
-  while IFS= read -r lang; do
-    [[ -n "$lang" ]] && mise use -g "$lang" || true
-  done <<< "$selected_langs"
+  optional_langs=(node ruby python go rust java php elixir erlang scala kotlin deno bun)
+  lang_defaults=(node ruby)
+
+  for lang in $optional_langs; do
+    if lang_present "$lang"; then
+      echo "Upgrading $lang..."
+      mise upgrade "$lang" || mise install "$lang" || true
+      echo "✓ $lang"
+    fi
+  done
+
+  missing_langs=()
+  lang_selected_flags=()
+  for lang in $optional_langs; do
+    if ! lang_present "$lang"; then
+      missing_langs+=("$lang")
+      if (( ${lang_defaults[(Ie)$lang]} )); then
+        lang_selected_flags+=(--selected="$lang")
+      fi
+    fi
+  done
+
+  if (( ${#missing_langs[@]} > 0 )); then
+    selected_langs=$(gum choose --no-limit --height=15 \
+      "${lang_selected_flags[@]}" \
+      "${missing_langs[@]}")
+    while IFS= read -r lang; do
+      [[ -n "$lang" ]] && mise use -g "$lang" || true
+    done <<< "$selected_langs"
+  else
+    echo "✓ All optional languages already installed"
+  fi
 
   # Omamac configs
   section "Configuring Mac..."
@@ -143,8 +234,7 @@ EOF
   . "$INSTALLER_DIR/install/mac.sh"
   echo "✓ Settings"
 
-  # Correct hammerspoon config location
-  ensure_cask hammerspoon
+  # Correct hammerspoon config location (cask already ensured above)
   defaults write org.hammerspoon.Hammerspoon MJConfigFile "$HOME/.config/hammerspoon/init.lua"
 
   # Done!
@@ -158,10 +248,10 @@ EOF
   echo "7. Remember to authenticate with: gh auth login"
   echo "8. Then logout and back in for everything to take effect (Cmd + Shift + Q)"
 
-  ensure_cask hammerspoon || true
-  ensure_cask rectangle-pro || true
-  ensure_cask raycast || true
-  ensure_cask tailscale || true
+  cask_present hammerspoon || ensure_cask hammerspoon || true
+  cask_present rectangle-pro || ensure_cask rectangle-pro || true
+  cask_present raycast || ensure_cask raycast || true
+  cask_present tailscale || ensure_cask tailscale || true
 
   open_if_present "Hammerspoon"
   open_if_present "Rectangle Pro"
