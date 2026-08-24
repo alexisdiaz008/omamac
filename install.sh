@@ -67,7 +67,7 @@ install() {
   fi
 
   # Clone
-  REPO="https://github.com/omacom-io/omamac.git"
+  REPO="https://github.com/alexisdiaz008/omamac.git"
   INSTALLER_DIR="$(mktemp -d)"
   trap 'rm -rf "$INSTALLER_DIR"' EXIT
 
@@ -151,11 +151,12 @@ EOF
   section "Finished!"
   echo "1. You must manually create the nine default workspaces with F3"
   echo "2. Manually disable all Keyboard Shortcuts for Windows + Spotlight + Mission Control"
-  echo "3. Manually enable 'Switch to Desktop' Keyboard Shortcuts on CMD-[1-9]"
-  echo "4. Manually import Rectangle Pro config from ~/.config/rectangle/RectangleProConfig.json (reveal hidden with Cmd + Shift + . in Finder)"
-  echo "5. Manually import Raycast config from ~/.config/raycast/Raycast.rayconfig with pw: 12345678"
-  echo "6. Remember to authenticate with: gh auth login"
-  echo "7. Then logout and back in for everything to take effect (Cmd + Shift + Q)"
+  echo "3. Manually enable 'Switch to Desktop' Keyboard Shortcuts on CTRL-[1-9]"
+  echo "4. Disable Accessibility Zoom shortcuts (Option+Command+/-) so Rectangle Pro can use Cmd+Option+/-"
+  echo "5. Manually import Rectangle Pro config from ~/.config/rectangle/RectangleProConfig.json (reveal hidden with Cmd + Shift + . in Finder)"
+  echo "6. Manually import Raycast config from ~/.config/raycast/Raycast.rayconfig with pw: 12345678"
+  echo "7. Remember to authenticate with: gh auth login"
+  echo "8. Then logout and back in for everything to take effect (Cmd + Shift + Q)"
 
   ensure_cask hammerspoon || true
   ensure_cask rectangle-pro || true

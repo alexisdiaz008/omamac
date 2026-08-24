@@ -34,6 +34,14 @@ Note: This will overwrite any existing configurations for `.zshrc`, Neovim, and 
 | `Cmd + Ctrl + ↑` | Focus window above |
 | `Cmd + Ctrl + ↓` | Focus window below |
 
+### Workspace Switching (Mission Control)
+
+Bind these in **System Settings → Keyboard → Keyboard Shortcuts → Mission Control** (Switch to Desktop 1–9).
+
+| Hotkey | Action |
+|--------|--------|
+| `Ctrl + 1` … `Ctrl + 9` | Switch to Desktop 1–9 |
+
 ### Window Positioning (Rectangle Pro)
 
 | Hotkey | Action |
@@ -52,6 +60,10 @@ Note: This will overwrite any existing configurations for `.zshrc`, Neovim, and 
 | `Cmd + ⌥ + Ctrl + Shift + ↓` | Bottom Right Eighth |
 | `Cmd + ⌥ + Return` | Center Half |
 | `Cmd + ⌥ + Ctrl + Return` | Maximize |
+| `Cmd + ⌥ + -` | Make smaller (fill left/right) |
+| `Cmd + ⌥ + =` | Make larger (fill left/right) |
+
+If `Cmd + ⌥ + -` / `=` zooms the screen instead of resizing, disable Accessibility Zoom under **Keyboard Shortcuts → Accessibility**.
 
 ### Application Launching (Raycast)
 

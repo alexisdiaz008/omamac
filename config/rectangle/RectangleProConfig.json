@@ -573,6 +573,10 @@
       "keyCode" : 123,
       "modifierFlags" : 1835008
     },
+    "larger" : {
+      "keyCode" : 24,
+      "modifierFlags" : 1572864
+    },
     "lastFourth" : {
       "keyCode" : 124,
       "modifierFlags" : 1835008
@@ -587,6 +591,10 @@
     },
     "rightHalf" : {
       "keyCode" : 124,
+      "modifierFlags" : 1572864
+    },
+    "smaller" : {
+      "keyCode" : 27,
       "modifierFlags" : 1572864
     },
     "topLeft" : {
