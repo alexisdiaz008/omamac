@@ -7,11 +7,37 @@ _omamac_brew_prefix="${HOMEBREW_PREFIX:-/opt/homebrew}"
 [[ -r "$_omamac_brew_prefix/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh" ]] &&
   source "$_omamac_brew_prefix/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh"
 
-# Highlighter, then autosuggestions (wrap the line editor)
-[[ -r "$_omamac_brew_prefix/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh" ]] &&
-  source "$_omamac_brew_prefix/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh"
+# fzf key bindings (Ctrl-R history, Ctrl-T files, Alt-C cd) after autocomplete so
+# they win. Omadots' inits only looks in /usr/share/fzf (Linux). Skip fzf's
+# completion.zsh: autocomplete owns Tab.
+[[ -r "$_omamac_brew_prefix/opt/fzf/shell/key-bindings.zsh" ]] &&
+  source "$_omamac_brew_prefix/opt/fzf/shell/key-bindings.zsh"
 
 [[ -r "$_omamac_brew_prefix/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] &&
   source "$_omamac_brew_prefix/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
 
+# Highlighter last, deferred to the first prompt: autocomplete binds keys to
+# widgets (menu-search, recent-paths) it only creates in its first precmd, and
+# wrapping them earlier prints "unhandled ZLE widget" warnings.
+_omamac_fsh="$_omamac_brew_prefix/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh"
+if [[ -r "$_omamac_fsh" ]]; then
+  _omamac_load_highlighting() {
+    add-zsh-hook -d precmd _omamac_load_highlighting
+    source "$_omamac_fsh"
+    unset _omamac_fsh
+    unfunction _omamac_load_highlighting
+  }
+  autoload -Uz add-zsh-hook
+  add-zsh-hook precmd _omamac_load_highlighting
+else
+  unset _omamac_fsh
+fi
+
 unset _omamac_brew_prefix
+
+# Extra aliases (Omadots only ships g/gcm/gcam/gcad).
+# If you want the rest of oh-my-zsh's git aliases, source the plugin here — not
+# ~/.oh-my-zsh/oh-my-zsh.sh, which fights Starship and the plugins above:
+#   [[ -r "$HOME/.oh-my-zsh/plugins/git/git.plugin.zsh" ]] &&
+#     source "$HOME/.oh-my-zsh/plugins/git/git.plugin.zsh"
+alias gco='git checkout'
