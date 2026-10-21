@@ -4,7 +4,7 @@ osascript -e 'tell application "System Events" to tell appearance preferences to
 # Configure the dock
 defaults write com.apple.dock orientation -string "bottom"
 defaults write com.apple.dock autohide -bool true
-defaults write com.apple.dock tilesize -int 43
+defaults write com.apple.dock tilesize -int 49
 defaults write com.apple.dock mru-spaces -bool false
 
 # Normal (non-natural) scroll direction
