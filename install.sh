@@ -99,7 +99,7 @@ install() {
   git clone --depth 1 "$REPO" "$INSTALLER_DIR"
 
   section "Installing packages..."
-  packages=(tmux mise nvim opencode lazygit lazydocker starship zoxide eza jq gum gh libyaml zsh-autosuggestions zsh-fast-syntax-highlighting zsh-autocomplete)
+  packages=(tmux mise nvim opencode lazygit lazydocker starship zoxide eza fzf bat jq gum gh libyaml zsh-autosuggestions zsh-fast-syntax-highlighting zsh-autocomplete)
   for pkg in $packages; do ensure_formula "$pkg"; done
 
   # Install Alacritty manually from GitHub releases (skips if already present)
